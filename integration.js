@@ -4,7 +4,7 @@ let request = require('request');
 let util = require('util');
 let net = require('net');
 let config = require('./config/config');
-let {Address6} = require('ip-address');
+let { Address6 } = require('ip-address');
 let async = require('async');
 let fs = require('fs');
 let SessionManager = require('./lib/session-manager');
@@ -30,7 +30,7 @@ function createEntityGroups(entities, options, cb) {
     let entityGroups = [];
     let entityGroup = [];
 
-    Logger.debug({entities: entities, options: options}, 'Entities and Options');
+    Logger.debug({ entities: entities, options: options }, 'Entities and Options');
 
     entities.forEach(function (entity) {
         if (entityGroup.length >= MAX_ENTITIES_PER_LOOKUP) {
@@ -52,7 +52,7 @@ function createEntityGroups(entities, options, cb) {
         entityGroups.push(entityGroup);
     }
 
-    Logger.trace({entityGroups: entityGroups}, 'Entity Groups');
+    Logger.trace({ entityGroups: entityGroups }, 'Entity Groups');
 
     _doLookup(entityGroups, entityLookup, options, cb);
 }
@@ -65,25 +65,25 @@ function createEntityGroups(entities, options, cb) {
  */
 function _doLookup(entityGroups, entityLookup, options, cb) {
     if (entityGroups.length > 0) {
-        Logger.trace({entityGroups: entityGroups}, 'Looking up Entity Groups');
+        Logger.trace({ entityGroups: entityGroups }, 'Looking up Entity Groups');
 
         let sessionToken = sessionManager.getSession(options.username, options.password);
 
         if (sessionToken) {
             // we are already authenticated.
-            Logger.trace({numSession: sessionManager.getNumSessions()}, 'Session Already Exists');
+            Logger.trace({ numSession: sessionManager.getNumSessions() }, 'Session Already Exists');
 
             _lookupWithSessionToken(entityGroups, entityLookup, options, sessionToken, function (err, results) {
                 if (err && err === ERROR_EXPIRED_SESSION) {
                     // the session was expired so we need to retry remove the session and try again
-                    Logger.trace({err: err}, "Clearing Session");
+                    Logger.trace({ err: err }, "Clearing Session");
                     sessionManager.clearSession(options.username, options.password);
                     _doLookup(entityGroups, entityLookup, options, cb);
                 } else if (err) {
-                    Logger.error({err: err}, 'Error doing lookup');
+                    Logger.error({ err: err }, 'Error doing lookup');
                     cb(err);
                 } else {
-                    Logger.trace({results: results}, "Logging results in dolookup");
+                    Logger.trace({ results: results }, "Logging results in dolookup");
                     cb(null, results);
                 }
             });
@@ -91,9 +91,9 @@ function _doLookup(entityGroups, entityLookup, options, cb) {
             // we are not authenticated so we need to login and get a sessionToken
             Logger.trace('Session does not exist. Creating Session');
             _login(options, function (err, sessionToken) {
-                Logger.trace({sessionToken: sessionToken}, 'Created new session');
+                Logger.trace({ sessionToken: sessionToken }, 'Created new session');
                 if (err) {
-                    Logger.error({err: err}, 'Error logging in');
+                    Logger.error({ err: err }, 'Error logging in');
                     // Cover the case where an error is returned but the session was still created.
                     if (err === ERROR_EXPIRED_SESSION) {
                         cb({
@@ -128,7 +128,7 @@ function _lookupWithSessionToken(entityGroups, entityLookup, options, sessionTok
             return;
         }
 
-        Logger.trace({results: results}, "Results from async map lookupEntity");
+        Logger.trace({ results: results }, "Results from async map lookupEntity");
 
         results.forEach(tqItem => {
             if (tqItem.data.length > 0) {
@@ -151,7 +151,7 @@ function _lookupWithSessionToken(entityGroups, entityLookup, options, sessionTok
             }
         });
 
-        Logger.trace({lookupResults: lookupResults}, 'Lookup Results');
+        Logger.trace({ lookupResults: lookupResults }, 'Lookup Results');
 
         cb(null, lookupResults);
     });
@@ -171,12 +171,12 @@ function _handleRequestError(err, response, body, options, cb) {
     // receive this error.
     // 401 is returned if the session is expired.
     if (response.statusCode === 401) {
-        Logger.trace({err: err, body: body}, "Received HTTP Status 401");
+        Logger.trace({ err: err, body: body }, "Received HTTP Status 401");
         cb(ERROR_EXPIRED_SESSION);
         return;
     }
 
-    if (response.statusCode !== 200) {
+    if (response.statusCode !== 200 && response.statusCode !== 201) {
         cb(_createJsonErrorPayload(response.statusMessage, null, response.statusCode, '2A', 'STAXX HTTP Request Failed', {
             response: response,
             body: body
@@ -189,6 +189,8 @@ function _handleRequestError(err, response, body, options, cb) {
 
 
 function _login(options, done) {
+    Logger.error('options are ', { options: options });
+
     //do the lookup
     let requestOptions = {
         method: 'POST',
@@ -269,9 +271,9 @@ function _lookupEntity(entitiesArray, entityLookup, apiToken, options, done) {
         _handleRequestError(err, response, body, options, function (err, body) {
             if (err) {
                 if (err === ERROR_EXPIRED_SESSION) {
-                    Logger.trace({err: err}, 'Session Expired');
+                    Logger.trace({ err: err }, 'Session Expired');
                 } else {
-                    Logger.error({err: err}, 'Error Looking up Entity');
+                    Logger.error({ err: err }, 'Error Looking up Entity');
                 }
 
                 done(err);
@@ -280,7 +282,7 @@ function _lookupEntity(entitiesArray, entityLookup, apiToken, options, done) {
 
             body._entityObject = entityLookup[entitiesArray[0].toLowerCase()];
 
-            Logger.trace({body: body}, "_lookupEntity Results");
+            Logger.trace({ body: body }, "_lookupEntity Results");
 
             done(null, body);
         });
@@ -399,8 +401,68 @@ function validateOptions(userOptions, cb) {
     cb(null, errors);
 }
 
+function onMessage(payload, integrationOptions, callback) {
+    Logger.trace('on message called with', payload);
+
+    let id = payload.data.id;
+    let comment = payload.data.comment;
+
+    let sessionToken = sessionManager.getSession(integrationOptions.username, integrationOptions.password);
+
+    if (sessionToken) {
+        _postComment(sessionToken, id, comment, integrationOptions, callback);
+    } else {
+        _login(integrationOptions, (err, sessionToken) => {
+            Logger.trace({ sessionToken: sessionToken }, 'Created new session');
+            if (err) {
+                Logger.error({ err: err }, 'Error logging in');
+                // Cover the case where an error is returned but the session was still created.
+                if (err === ERROR_EXPIRED_SESSION) {
+                    callback({
+                        detail: 'Session Expired While Trying to Login'
+                    });
+                } else {
+                    callback(err);
+                }
+                return;
+            }
+
+            sessionManager.setSession(options.username, options.password, sessionToken);
+            _postComment(sessionToken, id, comment, integrationOptions, callback);
+        });
+    }
+}
+
+function _postComment(apiToken, id, comment, integrationOptions, callback) {
+    let requestOptions = {
+        method: 'POST',
+        uri: `${integrationOptions.url}/api/indicators/${id}/comments`,
+        body: {
+            value: comment
+        },
+        headers: {
+            Authorization: "Bearer " + apiToken
+        },
+        json: true
+    };
+
+    Logger.trace('sending comment to threatQ', requestOptions);
+
+    requestWithDefaults(requestOptions, (err, resp, body) => {
+        _handleRequestError(err, resp, body, integrationOptions, (err, body) => {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, { data: `sent comment ${comment}` });
+        });
+    });
+}
+
 module.exports = {
     doLookup: createEntityGroups,
+    onMessage: onMessage,
     startup: startup,
     validateOptions: validateOptions
 };

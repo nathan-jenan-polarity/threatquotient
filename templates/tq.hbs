@@ -1,62 +1,69 @@
-
-
 <div class="dnsdball">
-{{#each block.data.details.allData as |item|}}
+    {{#each block.data.details.allData as |item|}}
 
-<div class = "name">
-    {{#if item.type.name}}
-    <i class = "fa fa-info-circle #ADADAD"></i><span class="type"> <b> Type: </b> </span>
-    {{item.type.name}}  <a href="{{block.data.details.url}}{{item.id}}/details">  (View in ThreatQ) </a>
-    {{/if}}
-</div>
+    <div class="name">
+        {{#if item.type.name}}
+        <i class="fa fa-info-circle #ADADAD"></i><span class="type"> <b> Type: </b> </span>
+        {{item.type.name}} <a href="{{block.data.details.url}}{{item.id}}/details"> (View in ThreatQ) </a>
+        {{/if}}
+    </div>
 
-<div class = "description">
-    {{#if item.status.description}}
-    <span class="counts"> Description: </span>
-    <b>{{item.status.description}}</b>
-    {{/if}}
-</div>
+    <div class="description">
+        {{#if item.status.description}}
+        <span class="counts"> Description: </span>
+        <b>{{item.status.description}}</b>
+        {{/if}}
+    </div>
 
-<div class = "hash">
-    {{#if item.hash}}
-    <span class="hashes"> Hash: </span>
-    <b>{{item.hash}}</b>
-    {{/if}}
-</div>
+    <div class="hash">
+        {{#if item.hash}}
+        <span class="hashes"> Hash: </span>
+        <b>{{item.hash}}</b>
+        {{/if}}
+    </div>
 
-<div class = "first">
-    {{#if item.touched_at}}
-    <span class="Ctimefirst"> Touched: </span>
-    <b>{{item.touched_at}}</b>
-    {{/if}}
-</div>
+    <div class="first">
+        {{#if item.touched_at}}
+        <span class="Ctimefirst"> Touched: </span>
+        <b>{{item.touched_at}}</b>
+        {{/if}}
+    </div>
 
-<div class = "last">
-    {{#if item.last_detected_at}}
-    <span class="Ctimelast"> Last Detected: </span>
-    <b>{{item.last_detected_at}}</b>
-    {{/if}}
-</div>
+    <div class="last">
+        {{#if item.last_detected_at}}
+        <span class="Ctimelast"> Last Detected: </span>
+        <b>{{item.last_detected_at}}</b>
+        {{/if}}
+    </div>
 
-    <div class = "created">
+    <div class="created">
         {{#if item.created_at}}
         <span class="created_at"> Created: </span>
         <b>{{item.created_at}}</b>
         {{/if}}
     </div>
 
-    <div class = "updated">
+    <div class="updated">
         {{#if item.updated_at}}
         <span class="updated_at"> Last Updated: </span>
         <b>{{item.updated_at}}</b>
         {{/if}}
     </div>
     {{#if (gt item.sources.length 0)}}
-        <div class = "updated">
-            <span class="updated_at"> Sources: </span>
-            {{!-- the single line spacing is important here to prevent an added whitespace in the HTML output --}}
-            {{#each item.sources as |source index|}}<b>{{if index ", "}}{{source.name}}</b>{{/each}}
-        </div>
+    <div class="updated">
+        <span class="updated_at"> Sources: </span>
+        {{!-- the single line spacing is important here to prevent an added whitespace in the HTML output --}}
+        {{#each item.sources as |source index|}}<b>{{if index ", "}}{{source.name}}</b>{{/each}}
+    </div>
     {{/if}}
-{{/each}}
+    <div>
+
+        <form {{action "addComment" item.id note on="submit"}}>
+            Comment:<br />
+            {{input type="text" value=note}}<br />
+            <button type="submit" disabled={{disabled}}>Add</button>
+            {{message}}
+        </form>
+    </div>
+    {{/each}}
 </div>
