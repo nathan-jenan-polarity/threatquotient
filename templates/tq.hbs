@@ -58,7 +58,7 @@
     {{/if}}
     <div>
 
-        <form {{action "addComment" item.id note on="submit"}}>
+        <form {{action "addComment" item.id on="submit"}}>
             Comment:<br />
             {{input type="text" value=note}}<br />
             <button type="submit" disabled={{disabled}}>Add</button>
