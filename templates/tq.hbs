@@ -1,64 +1,64 @@
-<div class="dnsdball">
+<div>
     {{#each block.data.details.allData as |item|}}
 
-    <div class="name">
+    <div>
         {{#if item.type.name}}
-        <i class="fa fa-info-circle #ADADAD"></i><span class="type"> <b> Type: </b> </span>
-        {{item.type.name}} <a href="{{block.data.details.url}}{{item.id}}/details"> (View in ThreatQ) </a>
+        <span class="p-key">Type: </span>
+        <span class="p-value">{{item.type.name}} </span>
+        <a href="{{block.data.details.url}}{{item.id}}/details"> (View in ThreatQ) </a>
         {{/if}}
     </div>
 
-    <div class="description">
+    <div>
         {{#if item.status.description}}
-        <span class="counts"> Description: </span>
-        <b>{{item.status.description}}</b>
+        <span class="p-key"> Description: </span>
+        <span class="p-value">{{item.status.description}}</span>
         {{/if}}
     </div>
 
-    <div class="hash">
+    <div>
         {{#if item.hash}}
-        <span class="hashes"> Hash: </span>
-        <b>{{item.hash}}</b>
+        <span class="p-key"> Hash: </span>
+        <span class="p-value">{{item.hash}}</span>
         {{/if}}
     </div>
 
     <div class="first">
         {{#if item.touched_at}}
-        <span class="Ctimefirst"> Touched: </span>
-        <b>{{item.touched_at}}</b>
+        <span class="p-key"> Touched: </span>
+        <span class="p-value">{{item.touched_at}}</span>
         {{/if}}
     </div>
 
     <div class="last">
         {{#if item.last_detected_at}}
-        <span class="Ctimelast"> Last Detected: </span>
-        <b>{{item.last_detected_at}}</b>
+        <span class="p-key"> Last Detected: </span>
+        <span class="p-value">{{item.last_detected_at}}</span>
         {{/if}}
     </div>
 
     <div class="created">
         {{#if item.created_at}}
-        <span class="created_at"> Created: </span>
-        <b>{{item.created_at}}</b>
+        <span class="p-key"> Created: </span>
+        <span class="p-value">{{item.created_at}}</span>
         {{/if}}
     </div>
 
     <div class="updated">
         {{#if item.updated_at}}
-        <span class="updated_at"> Last Updated: </span>
-        <b>{{item.updated_at}}</b>
+        <span class="p-key"> Last Updated: </span>
+        <span class="p-value">{{item.updated_at}}</span>
         {{/if}}
     </div>
     {{#if (gt item.sources.length 0)}}
     <div class="updated">
-        <span class="updated_at"> Sources: </span>
+        <span class="p-key"> Sources: </span>
         {{!-- the single line spacing is important here to prevent an added whitespace in the HTML output --}}
-        {{#each item.sources as |source index|}}<b>{{if index ", "}}{{source.name}}</b>{{/each}}
+        {{#each item.sources as |source index|}}<span class="p-value">{{if index ", "}}{{source.name}}</span>{{/each}}
     </div>
     {{/if}}
     <div>
-
-        <form {{action "addComment" item.id on="submit"}}>
+        <form {{action "addComment" item.id note on="submit"}}>
             Comment:<br />
             {{input type="text" value=note}}<br />
             <button type="submit" disabled={{disabled}}>Add</button>
